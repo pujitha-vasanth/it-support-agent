@@ -1,0 +1,402 @@
+[
+  {
+    "id": "G001",
+    "type": "fact",
+    "question": "What is the maximum VPN session duration?",
+    "reference_answer": "The maximum VPN session duration is 12 hours, after which re-authentication is required.",
+    "expected_doc": "vpn-remote-access",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G002",
+    "type": "fact",
+    "question": "What is the password expiry rule?",
+    "reference_answer": "The password expiry rule is standard passwords do not expire on a schedule; they are changed only on suspicion of compromise.",
+    "expected_doc": "password-and-mfa",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G003",
+    "type": "fact",
+    "question": "What is the minimum spare laptop buffer held by Desktop Support?",
+    "reference_answer": "The minimum spare laptop buffer held by Desktop Support is 18 imaged spare devices across the Meridian Group sites.",
+    "expected_doc": "laptop-provisioning",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G004",
+    "type": "fact",
+    "question": "For email and outlook services, what is the recoverable items retention for deleted mail?",
+    "reference_answer": "The recoverable items retention for deleted mail is 21 days before items are purged permanently.",
+    "expected_doc": "email-and-outlook",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G005",
+    "type": "fact",
+    "question": "For printing services, what is the printer fault response target?",
+    "reference_answer": "The printer fault response target is 8 working hours for a device that is the only printer on a floor.",
+    "expected_doc": "printing-services",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G006",
+    "type": "fact",
+    "question": "For software request and installation, what is the spend threshold requiring Finance approval?",
+    "reference_answer": "The spend threshold requiring Finance approval is GBP 1,500 per request, including the first year of support.",
+    "expected_doc": "software-request-and-install",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G007",
+    "type": "fact",
+    "question": "What is the corporate wireless network name and authentication method?",
+    "reference_answer": "The corporate wireless network name and authentication method is MG-CORP, using certificate based EAP-TLS authentication.",
+    "expected_doc": "wifi-and-network-access",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G008",
+    "type": "fact",
+    "question": "For virtual desktop services, what is the idle session disconnect threshold?",
+    "reference_answer": "The idle session disconnect threshold is 25 minutes of inactivity before the session is disconnected.",
+    "expected_doc": "vdi-virtual-desktop",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G009",
+    "type": "fact",
+    "question": "What is the OneDrive storage allocation per licensed user?",
+    "reference_answer": "The OneDrive storage allocation per licensed user is 5 TB per user.",
+    "expected_doc": "file-shares-and-storage",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G010",
+    "type": "fact",
+    "question": "For backup and restore, what is the recovery time objective for tier 1 systems?",
+    "reference_answer": "The recovery time objective for tier 1 systems is 2 hours from the declaration of a restore event.",
+    "expected_doc": "backup-and-restore",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G011",
+    "type": "fact",
+    "question": "What is the evidence retention period for a closed incident?",
+    "reference_answer": "The evidence retention period for a closed incident is 26 months from the closure date, held in the sealed evidence store.",
+    "expected_doc": "security-incident-response",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G012",
+    "type": "fact",
+    "question": "For phishing and email security, what is the simulation programme frequency?",
+    "reference_answer": "The simulation programme frequency is a phishing simulation to every employee once per quarter, with a reporting rate target of 65 percent.",
+    "expected_doc": "phishing-and-email-security",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G013",
+    "type": "fact",
+    "question": "What is the classification tiers?",
+    "reference_answer": "The classification tiers is four tiers: Public, Internal, Confidential and Restricted.",
+    "expected_doc": "data-classification",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G014",
+    "type": "fact",
+    "question": "For BYOD and mobile device, what is the minimum operating system versions?",
+    "reference_answer": "The minimum operating system versions is iOS 17.4 or later and Android 14 or later; devices below these floors are blocked from company data.",
+    "expected_doc": "byod-mobile-devices",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G015",
+    "type": "fact",
+    "question": "What is the asset tag format?",
+    "reference_answer": "The asset tag format is MG followed by a six digit sequence, for example MG004821, applied before the device leaves the build room.",
+    "expected_doc": "asset-lifecycle-management",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G016",
+    "type": "fact",
+    "question": "What is the workstation patch deadline for moderate and low severity?",
+    "reference_answer": "The workstation patch deadline for moderate and low severity is 38 calendar days from release to installed.",
+    "expected_doc": "patching-and-updates",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G017",
+    "type": "fact",
+    "question": "For new joiner IT onboarding, what is the day one checklist item count?",
+    "reference_answer": "The day one checklist item count is 9 mandatory items, all of which must be ticked in ServiceNow before the record is closed.",
+    "expected_doc": "onboarding-new-joiner",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G018",
+    "type": "fact",
+    "question": "For leaver offboarding, what is the data handover owner?",
+    "reference_answer": "The data handover owner is the line manager, who must confirm handover in ServiceNow within 6 working days of the leaving date.",
+    "expected_doc": "offboarding-leaver",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G019",
+    "type": "fact",
+    "question": "What is the inactivity threshold before a licence is reclaimed?",
+    "reference_answer": "The inactivity threshold before a licence is reclaimed is 52 consecutive days without a sign-in to the licensed application.",
+    "expected_doc": "licence-management",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G020",
+    "type": "fact",
+    "question": "For collaboration tools, what is the channel creation rights?",
+    "reference_answer": "The channel creation rights is any employee may create a public channel; private channels require a workspace owner in Collaboration Services.",
+    "expected_doc": "collaboration-tools",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G021",
+    "type": "fact",
+    "question": "For video conferencing, what is the recording consent requirement?",
+    "reference_answer": "The recording consent requirement is a spoken announcement plus the on-screen recording indicator, with any objection ending the recording.",
+    "expected_doc": "video-conferencing",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G022",
+    "type": "fact",
+    "question": "For identity and single sign-on, what is the group mapping limit per application?",
+    "reference_answer": "The group mapping limit per application is 27 directory groups per application assignment.",
+    "expected_doc": "identity-and-sso",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G023",
+    "type": "fact",
+    "question": "For privileged access management, what is the break-glass account count?",
+    "reference_answer": "The break-glass account count is 2 accounts per production platform, with credentials split between Information Security and Network Operations.",
+    "expected_doc": "privileged-access",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G024",
+    "type": "fact",
+    "question": "What is the leaver account deletion point?",
+    "reference_answer": "The leaver account deletion point is 35 days after the account is disabled, once the mailbox export is confirmed.",
+    "expected_doc": "account-provisioning",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G025",
+    "type": "fact",
+    "question": "What is the standard warranty term on corporate laptops?",
+    "reference_answer": "The standard warranty term on corporate laptops is 36 months from the delivery date, with next business day onsite response.",
+    "expected_doc": "hardware-repair-and-warranty",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G026",
+    "type": "fact",
+    "question": "For service desk service level, what is the P1 targets?",
+    "reference_answer": "The P1 targets is 15 minute response and 3 hour resolution, measured around the clock.",
+    "expected_doc": "service-desk-slas",
+    "expected_section": "Service parameters"
+  },
+  {
+    "id": "G027",
+    "type": "troubleshooting",
+    "question": "What does error code A-AUTOPILOT-0x801C03F2 mean and how do we resolve it?",
+    "reference_answer": "Cause: The device hardware hash was never uploaded to Intune, so the laptop is not recognised as a Meridian Group corporate device. Resolution: Collect the hardware hash using the Get-WindowsAutopilotInfo script and upload it to Intune, then reset the device and retry enrolment. Allow a full synchronisation cycle before the second attempt. If enrolment fails again on the same serial number, escalate to the Intune administrators with the enrolment log bundle.",
+    "expected_doc": "laptop-provisioning",
+    "expected_section": "Troubleshooting"
+  },
+  {
+    "id": "G028",
+    "type": "troubleshooting",
+    "question": "A user reports this: outlook repeatedly prompts for credentials and will not connect to the mailbox.. What is the cause and what should we do?",
+    "reference_answer": "Cause: A stale cached credential in the Windows credential manager is being replayed against Exchange Online. Resolution: Remove the Office and Exchange entries from the Windows credential manager, close Outlook fully and sign in again with the user's Entra ID account. Check that the device is compliant so conditional access does not block the sign-in. Escalate to the identity team if the prompt returns after a second clean sign-in.",
+    "expected_doc": "email-and-outlook",
+    "expected_section": "Troubleshooting"
+  },
+  {
+    "id": "G029",
+    "type": "troubleshooting",
+    "question": "What does error code A-SCAN-SMTP-554 mean and how do we resolve it?",
+    "reference_answer": "Cause: The scanned file exceeds the attachment limit and the mail relay is dropping the message. Resolution: Ask the user to rescan at a lower resolution or split the document so each file stays under the attachment limit. Confirm delivery of the smaller test scan before closing. Escalate to Messaging Services if a small test scan also fails to arrive, because that points at the mail relay rather than the device.",
+    "expected_doc": "printing-services",
+    "expected_section": "Troubleshooting"
+  },
+  {
+    "id": "G030",
+    "type": "troubleshooting",
+    "question": "A user reports this: a licensed title prompts for activation on a device that should already be entitled.. What is the cause and what should we do?",
+    "reference_answer": "Cause: The device is not a member of the Entra ID group that carries the licence assignment. Resolution: Add the device or user to the correct licensing group, then force an Intune sync and reopen the application. Verify the entitlement count has headroom before adding the member. Escalate to IT Asset Management if the entitlement pool is already fully consumed, because a purchase may be needed.",
+    "expected_doc": "software-request-and-install",
+    "expected_section": "Troubleshooting"
+  },
+  {
+    "id": "G031",
+    "type": "troubleshooting",
+    "question": "What does error code A-EAPTLS-0x80420012 mean and how do we resolve it?",
+    "reference_answer": "Cause: The machine certificate has expired or was never issued, so EAP-TLS has nothing to present. Resolution: Check the certificate store on the device and trigger the certificate profile from Microsoft Intune to reissue the machine certificate. Reconnect to MG-CORP once the certificate shows a valid date range. Escalate to the certificate authority team if enrolment fails twice on the same device.",
+    "expected_doc": "wifi-and-network-access",
+    "expected_section": "Troubleshooting"
+  },
+  {
+    "id": "G032",
+    "type": "troubleshooting",
+    "question": "A user reports this: users report that the virtual desktop refuses new connections during the morning peak.. What is the cause and what should we do?",
+    "reference_answer": "Cause: Every session host has reached the concurrent session limit and the scaling plan has not yet added capacity. Resolution: Check the host pool session count against the per-host limit and confirm the scaling plan ramp-up window has started. Add session hosts manually if the peak is earlier than the ramp-up window. Escalate as a capacity request to Infrastructure Services if the pool hits its limit on more than three mornings in a month.",
+    "expected_doc": "vdi-virtual-desktop",
+    "expected_section": "Troubleshooting"
+  },
+  {
+    "id": "G033",
+    "type": "troubleshooting",
+    "question": "What does error code A-SPO-403-19 mean and how do we resolve it?",
+    "reference_answer": "Cause: The link was created as an anonymous link, which is disabled across the tenant. Resolution: Recreate the link as a specific people link addressed to the partner work email so a named guest account is created. Confirm the partner accepts the guest invitation before testing again. Escalate to Information Security if the partner domain is blocked from guest access.",
+    "expected_doc": "file-shares-and-storage",
+    "expected_section": "Troubleshooting"
+  },
+  {
+    "id": "G034",
+    "type": "troubleshooting",
+    "question": "A user reports this: a user reports that a file they deleted last month cannot be found in any restore point.. What is the cause and what should we do?",
+    "reference_answer": "Cause: The file was created and deleted entirely between two daily restore points, so it was never captured. Resolution: Confirm the deletion date against the retention tiers and check the 11 weekly and 37 monthly restore points before concluding the file is unrecoverable. Tell the user plainly if no restore point holds the file. Record the gap so the backup frequency for that share can be reviewed.",
+    "expected_doc": "backup-and-restore",
+    "expected_section": "Troubleshooting"
+  },
+  {
+    "id": "G035",
+    "type": "troubleshooting",
+    "question": "What does error code B-CRWD-4401 mean and how do we resolve it?",
+    "reference_answer": "Cause: The containment policy was applied to a stale device record while the user is working on a newly rebuilt device. Resolution: Match the device serial number in the console against the device the user is actually holding and apply containment to the correct record. Confirm loss of connectivity with the user before continuing. Escalate to Information Security immediately if the correct host cannot be identified within the Sev1 response target of 20 minutes.",
+    "expected_doc": "security-incident-response",
+    "expected_section": "Troubleshooting"
+  },
+  {
+    "id": "G036",
+    "type": "troubleshooting",
+    "question": "A user reports this: the Report Phishing button is missing from the Outlook ribbon.. What is the cause and what should we do?",
+    "reference_answer": "Cause: The reporting add-in has not been deployed to the user's mailbox or the client is running in a cached offline state. Resolution: Ask the user to restart Outlook and confirm they are signed in with their work account. If the button is still absent, check the add-in deployment for that mailbox and redeploy it. In the meantime, have the user send the message as an attachment to the service desk so triage is not delayed beyond the 45 minute target.",
+    "expected_doc": "phishing-and-email-security",
+    "expected_section": "Troubleshooting"
+  },
+  {
+    "id": "G037",
+    "type": "troubleshooting",
+    "question": "What does error code B-DLP-7731 mean and how do we resolve it?",
+    "reference_answer": "Cause: Restricted data is blocked from removable media by policy, and the block is enforced at the endpoint. Resolution: Explain that the block is intended and that Restricted data stays inside the managed environment. Offer an in-environment alternative such as a shared workspace with the correct label. Do not request a policy exception; escalate to Information Governance if the business process genuinely cannot work any other way.",
+    "expected_doc": "data-classification",
+    "expected_section": "Troubleshooting"
+  },
+  {
+    "id": "G038",
+    "type": "troubleshooting",
+    "question": "A user reports this: a user is worried that reporting a lost phone will delete their family photographs.. What is the cause and what should we do?",
+    "reference_answer": "Cause: The user is unaware that only a selective wipe of the company container is performed on a personal device. Resolution: Reassure the user that only the company container is removed and that personal photos, messages and apps are never touched. Complete the loss report without delay so sessions can be revoked. Record the reassurance given, as delayed reporting is the real risk here.",
+    "expected_doc": "byod-mobile-devices",
+    "expected_section": "Troubleshooting"
+  },
+  {
+    "id": "G039",
+    "type": "procedure",
+    "question": "What are the steps for receiving and tagging a new device?",
+    "reference_answer": "1. Check the delivered serial numbers against the purchase order before signing for the delivery. 2. Create the asset record and assign the next asset tag in the MG sequence. 3. Apply the physical asset tag to the device chassis. 4. Run the standard build and record the build version against the asset record. 5. Move the asset to Available status so it counts towards buffer stock.",
+    "expected_doc": "asset-lifecycle-management",
+    "expected_section": "Procedures"
+  },
+  {
+    "id": "G040",
+    "type": "procedure",
+    "question": "What are the steps for authorising an emergency patch?",
+    "reference_answer": "1. Document the vulnerability, the exposure and why waiting for the next window is unacceptable. 2. Obtain authorisation from the Infrastructure Services change lead. 3. Deploy to the pilot ring first, even under emergency conditions, unless exploitation is already confirmed. 4. Deploy to the remaining rings and monitor for failed installations. 5. File the retrospective change record within 2 working days.",
+    "expected_doc": "patching-and-updates",
+    "expected_section": "Procedures"
+  },
+  {
+    "id": "G041",
+    "type": "procedure",
+    "question": "What are the steps for completing day one handover?",
+    "reference_answer": "1. Verify the new joiner has signed in successfully with the temporary password. 2. Walk the joiner through setting a permanent password and registering multi-factor authentication. 3. Confirm the induction access bundle resolves by opening the intranet and the service portal. 4. Assign the IT Induction module and state the 11 calendar day deadline. 5. Tick the remaining items on the day one checklist and close the onboarding record.",
+    "expected_doc": "onboarding-new-joiner",
+    "expected_section": "Procedures"
+  },
+  {
+    "id": "G042",
+    "type": "procedure",
+    "question": "What are the steps for offboarding a standard leaver?",
+    "reference_answer": "1. Confirm the leaving date and time on the ServiceNow offboarding record. 2. Disable the Entra ID account and revoke all active sign-in sessions and refresh tokens. 3. Convert the mailbox to a shared mailbox and grant the line manager read access. 4. Reclaim all assigned software licences back to the central pool. 5. Issue the equipment return pack with the 14 calendar day deadline stated. 6. Close the record once the line manager has confirmed data handover.",
+    "expected_doc": "offboarding-leaver",
+    "expected_section": "Procedures"
+  },
+  {
+    "id": "G043",
+    "type": "procedure",
+    "question": "What are the steps for running the monthly harvesting cycle?",
+    "reference_answer": "1. Export the sign-in activity report for every managed product. 2. Flag every assignment with no sign-in for 52 consecutive days. 3. Send the single warning email 9 days before removal. 4. Remove the licence from any user who has still not signed in after the warning period. 5. Return the reclaimed seats to the pool and confirm headroom is back within the 3 to 6 per cent target.",
+    "expected_doc": "licence-management",
+    "expected_section": "Procedures"
+  },
+  {
+    "id": "G044",
+    "type": "procedure",
+    "question": "What are the steps for recovering an archived channel?",
+    "reference_answer": "1. Search the archive list in the service portal for the channel name. 2. Confirm the requester was a member before archiving. 3. Unarchive the channel and restore the original member list. 4. Post a message so the 98 day dormancy clock restarts. 5. Notify the requester that history before the 26 month retention limit is not recoverable.",
+    "expected_doc": "collaboration-tools",
+    "expected_section": "Procedures"
+  },
+  {
+    "id": "G045",
+    "type": "procedure",
+    "question": "What are the steps for recording a meeting lawfully?",
+    "reference_answer": "1. Announce at the start that the session will be recorded and why. 2. Start the recording and confirm the on-screen indicator is visible to all participants. 3. Stop the recording immediately if any participant objects. 4. Share the recording only with the stated audience. 5. Note that the recording is deleted automatically after 17 months.",
+    "expected_doc": "video-conferencing",
+    "expected_section": "Procedures"
+  },
+  {
+    "id": "G046",
+    "type": "procedure",
+    "question": "What are the steps for rotating a SAML signing certificate?",
+    "reference_answer": "1. Act on the renewal reminder issued 70 days before expiry. 2. Generate the new signing certificate in Okta and keep the existing one active. 3. Send the updated metadata to the application owner for upload. 4. Confirm a test sign-in succeeds against the new certificate. 5. Retire the previous certificate and record the new 33 month expiry date.",
+    "expected_doc": "identity-and-sso",
+    "expected_section": "Procedures"
+  },
+  {
+    "id": "G047",
+    "type": "procedure",
+    "question": "What are the steps for running the privileged role recertification?",
+    "reference_answer": "1. Generate the privileged role report at the start of each 61 day cycle. 2. Send each reviewer the list of privileged roles held by their team. 3. Record every confirmed role against the access register. 4. Remove any role the reviewer has not confirmed by the cycle close. 5. Report the removal count to the Information Security governance forum.",
+    "expected_doc": "privileged-access",
+    "expected_section": "Procedures"
+  },
+  {
+    "id": "G048",
+    "type": "procedure",
+    "question": "What are the steps for provisioning a new joiner account?",
+    "reference_answer": "1. Confirm the joiner record in the HR feed shows an approved start date and a populated job role. 2. Create the account in Entra ID using the firstname.lastname naming format. 3. Assign the role package that matches the job role rather than individual groups. 4. Issue the temporary password through the line manager, never directly to the joiner. 5. Confirm the user completes multi-factor authentication registration before the first working day. 6. Close the request with the account name and the role package recorded in the work notes.",
+    "expected_doc": "account-provisioning",
+    "expected_section": "Procedures"
+  },
+  {
+    "id": "G049",
+    "type": "procedure",
+    "question": "What are the steps for raising a warranty claim?",
+    "reference_answer": "1. Open a supplier case quoting the service tag and the diagnostic validation code. 2. Attach the fault description and any photographs of physical damage. 3. Select next business day onsite where the user is at a main office, or depot repair otherwise. 4. Issue a loan device to the user and record its asset number against the ticket. 5. Confirm the repair outcome with the engineer and close the supplier case.",
+    "expected_doc": "hardware-repair-and-warranty",
+    "expected_section": "Procedures"
+  },
+  {
+    "id": "G050",
+    "type": "procedure",
+    "question": "What are the steps for handling an SLA breach?",
+    "reference_answer": "1. Apply the correct breach reason code to the ticket before closure. 2. Capture the sequence of events and the point at which the clock was lost. 3. Hold the breach review within 5 business days with the resolving team present. 4. Raise corrective actions with named owners and due dates. 5. Report the breach and its actions at the monthly service review against the 94 per cent target.",
+    "expected_doc": "service-desk-slas",
+    "expected_section": "Procedures"
+  }
+]

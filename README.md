@@ -1,0 +1,2 @@
+# it-support-agent
+Answers staff IT questions from a 400-page policy and runbook corpus, so documented issues never become tickets. Retrieval pairs Azure OpenAI embeddings in pgvector with hybrid search (vector + BM25) and cross-encoder reranking; answers cite sources and refuse when none matches, scored on a 50-question golden set. A LangGraph planner calls the service as a tool, routing each ticket to three sub-agents behind a human approval gate.

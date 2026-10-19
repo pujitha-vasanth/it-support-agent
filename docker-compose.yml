@@ -1,0 +1,25 @@
+# Postgres 16 with the pgvector extension pre-installed.
+# Start it with:  docker compose up -d
+# Stop it with:   docker compose down
+# Wipe it with:   docker compose down -v   (deletes all data)
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: itsupport-db
+    environment:
+      POSTGRES_USER: itsupport
+      POSTGRES_PASSWORD: itsupport
+      POSTGRES_DB: itsupport
+    ports:
+      - "5433:5432"          # 5433 on your Mac, so it cannot clash with a local Postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U itsupport -d itsupport"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  pgdata:
