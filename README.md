@@ -1,101 +1,145 @@
 # IT Support Agent System
 
 A retrieval-grounded agent system that answers internal IT questions from a
-400-page policy and runbook corpus, and drafts ticket replies for human approval.
+policy and runbook corpus (30 documents, about 400 pages), and drafts ticket
+replies that wait for human approval.
 
 Built to test one idea: most IT tickets are already answered somewhere in the
 documentation. If retrieval is good enough and the system refuses to guess,
-those tickets never need to be opened.
+those tickets can be resolved without a person writing the reply.
 
 ## What it does
 
-- Answers staff IT questions with citations pointing back to the source document
-- Refuses to answer when no source supports the question, instead of guessing
-- Classifies incoming tickets, looks up the user and their assets, and drafts a reply
-- Holds every outbound action behind a human approval gate
+- Answers staff IT questions with citations back to the source document and section
+- Says `NOT_COVERED` when no retrieved source supports an answer, instead of guessing
+- Triages incoming tickets: category, priority, queue, and whether it can be auto-resolved
+- Looks up the requester's devices in the asset inventory when the ticket needs it
+- Drafts a reply and holds it as `pending`. Nothing is sent until a person approves it
 
 ## How it works
 
 ```mermaid
 flowchart LR
-    Q[Ticket or question] --> P[LangGraph planner]
-    P --> C[Classifier agent]
-    P --> R[Grounded answer agent]
-    P --> L[Asset lookup agent]
-    R --> RAG[(RAG service)]
-    C --> S[Shared typed state]
-    R --> S
-    L --> S
-    S --> D[Draft reply]
-    D --> H{Human approval}
-    H -->|approved| Send
-    H -->|rejected| Edit
+    T[Ticket] --> P[Planner]
+    P --> C[Classify]
+    C --> K[Knowledge agent]
+    C --> A[Asset agent]
+    K -- tool call --> R[(RAG service)]
+    A -- tool call --> I[(Asset inventory)]
+    K --> D[Draft reply]
+    A --> D
+    D --> S[Save as pending]
+    S --> H{Human approves or rejects}
 ```
 
-Two layers:
+Two layers, served from one FastAPI app:
 
-**1. Retrieval service (FastAPI)**
-Documents are chunked recursively and embedded with Azure OpenAI into pgvector.
-Queries run hybrid search, combining vector similarity with BM25 keyword matching,
-and the candidate set is reordered by a cross-encoder before it reaches the model.
-Answers are synthesised only from retrieved chunks and always carry citations.
+**1. Knowledge service (RAG)**
+- Documents are split on headings, then a sliding word window with overlap. Every chunk is prefixed with its document title and section
+- Chunks are embedded with OpenAI and stored in Postgres with pgvector
+- Each query runs vector search and Postgres full-text keyword search, merges the two lists with reciprocal rank fusion, then reorders the shortlist with a cross-encoder
+- The answer is written only from the retrieved chunks and carries citations
 
-**2. Agent layer (LangGraph)**
-A planner routes each ticket to three sub-agents that share typed state:
-classification, grounded answer (which calls the retrieval service as a tool),
-and user and asset lookup. Their outputs are composed into a draft reply that a
-human reviews before anything is sent.
+**2. Triage agent (LangGraph)**
+- A planner decides which sub-agents a ticket needs
+- After classification, the knowledge and asset sub-agents run in parallel when both are needed
+- The knowledge agent calls the RAG service as a tool. The queue is resolved from the owner of the retrieved document
+- The final node writes the draft to the database as `pending`. Approving is a separate human action (CLI or API)
 
 ## Design decisions
 
 | Decision | Why |
 |---|---|
-| Hybrid search instead of pure vector | IT docs are full of exact strings such as error codes, hostnames and policy numbers that embeddings alone retrieve poorly |
-| Cross-encoder reranking | Recall from hybrid search is good, precision at the top is not. Reranking fixes ordering before the model sees anything |
-| Refusal when no source matches | A wrong IT answer costs more than no answer. The system is tuned to abstain rather than to always respond |
-| RAG exposed as a tool, not embedded in the agent | Keeps retrieval independently testable and reusable by any agent that needs it |
-| Typed shared state | Sub-agents pass structured objects, not free text, so failures surface as validation errors rather than silent corruption |
-| Human approval gate | Anything that touches a real user is reviewed first. The system assists, it does not act alone |
+| Hybrid search, not pure vector | IT docs are full of exact strings (error codes, hostnames, policy numbers) that embeddings alone retrieve poorly |
+| Rank fusion before reranking | Vector and keyword scores are not on the same scale. Fusing by rank avoids tuning weights |
+| Cross-encoder reranking on a shortlist only | Hybrid search has good recall but weak ordering at the top. The cross-encoder is slow, so it never sees the whole corpus |
+| Title and section prefix on every chunk | "Step 3: click Connect" is meaningless without "VPN runbook" |
+| Abstain when no source matches | A wrong IT answer costs more than no answer |
+| RAG exposed as a tool, not baked into the agent | Retrieval stays independently testable and reusable by any agent |
+| Typed shared state | Sub-agents write named fields (category, priority, citations), not free text, so each step is inspectable in the trace |
+| Human approval gate | Anything that reaches a real user is reviewed first |
 
 ## Evaluation
 
-Scored against a 50-question golden set built from real ticket history, measuring:
+Two evaluation scripts, both writing results to `eval_results/` so runs can be compared.
 
-- **Faithfulness**, whether the answer is supported by the retrieved chunks
-- **Retrieval hit rate**, whether the correct source appears in the top-k results
-- **Refusal accuracy**, whether unanswerable questions are correctly declined
+**Knowledge service** (50-question golden set)
+- Retrieval hit rate, and hit rate at rank 1 after reranking
+- Faithfulness: every claim in the answer is supported by the retrieved context (model-judged)
+- Correctness against a reference answer (model-judged)
+- Abstention on questions that are answerable (each one is a miss)
 
-Regression runs on every change to chunking, embedding model or prompt.
+**Triage agent** (50 labelled tickets)
+- Category, priority and routing accuracy
+- Auto-resolve rate, reported together with **false auto-resolve rate** (tickets auto-resolved that needed a human). The second number is the one that matters
+- Asset tool recall: did the planner call the asset tool when the ticket needed it
 
-## Stack
+`make eval-free` runs retrieval scoring only, with no model calls and no cost.
 
-Python, FastAPI, LangGraph, LangChain, Azure OpenAI, pgvector, Supabase
+## Data
 
-## Getting started
+All data is synthetic and generated by `data/generate.py` for a fictional company, Meridian Group: the document corpus, the golden questions, the 50 tickets and a 60-device asset inventory. Generation is deterministic, so an eval score only changes when the system changes, never because the data shifted.
 
-```bash
-git clone https://github.com/pujitha-vasanth/<repo>.git
-cd <repo>
-pip install -r requirements.txt
-cp .env.example .env     # add Azure OpenAI and Supabase credentials
-python scripts/ingest.py --source ./docs
-uvicorn app.main:app --reload
-```
+## Run it locally
 
-Evaluation:
+You need Python 3.11+, Docker (for Postgres with pgvector) and an OpenAI API key.
 
 ```bash
-python scripts/evaluate.py --golden-set ./eval/golden_set.json
+git clone https://github.com/pujitha-vasanth/it-support-agent.git
+cd it-support-agent
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+cp .env.example .env             # then add your OPENAI_API_KEY
+
+make db-up                       # start Postgres + pgvector in Docker
+make setup                       # install, check setup, generate data, ingest
+make api                         # API at http://localhost:8000, docs at /docs
 ```
+
+Try it:
+
+```bash
+python -m knowledge.search "how long does a VPN session last?"
+make triage                      # triage all 50 sample tickets into the queue
+make pending                     # list drafts waiting for a human
+python -m agent.approve approve 3 --by "Your Name"
+make eval                        # run both evaluations
+```
+
+No key? Set `PROVIDER=fake` in `.env` to run the whole pipeline as a smoke test. Retrieval still works; answers will be placeholder text.
+
+Run `make help` for every command. `docs/Setup guide.docx` walks through setup step by step, and `Diagrams.docx` has the architecture diagrams.
+
+## API
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /knowledge/search` | Retrieval only, returns ranked chunks |
+| `POST /knowledge/ask` | Grounded answer with citations |
+| `POST /agent/triage` | Triage one ticket into the approval queue |
+| `GET /agent/runs`, `GET /agent/runs/{id}` | Review drafts |
+| `POST /agent/runs/{id}/approve`, `/reject` | Human decision |
+| `GET /health` | Database and table check |
 
 ## Project structure
-app/ FastAPI service, retrieval and agent graph
-scripts/ Ingestion and evaluation
-eval/ Golden set and results
-docs/ Source corpus (not committed)
+
+```
+app.py          FastAPI app: knowledge and agent routes
+knowledge/      ingestion, hybrid retrieval, reranking, grounded answers
+agent/          LangGraph graph, nodes, tools, typed state, approval CLI
+shared/         config, database, chunking, model provider (OpenAI or fake)
+eval/           knowledge and agent evaluations, model judges
+data/           synthetic corpus, golden set, tickets, asset inventory, generator
+scripts/        setup check, batch ticket run
+```
 
 ## Limitations
 
-- Tuned for a single English-language corpus. Multi-tenant access control is not implemented
-- Evaluated on 50 questions, which catches regressions but is not a broad benchmark
-- The asset lookup agent reads from a mock inventory, not a live CMDB
+- Single English-language corpus. No multi-tenant access control
+- 50 golden questions and 50 tickets catch regressions but are not a broad benchmark
+- The asset agent reads a CSV inventory, not a live CMDB
+- Evaluations run on demand, not in CI
+
+## Stack
+
+Python, FastAPI, LangGraph, OpenAI, Postgres + pgvector, sentence-transformers (cross-encoder), Docker
