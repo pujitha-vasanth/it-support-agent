@@ -1,0 +1,83 @@
+# Runs on every push and pull request. Free: no API key, no model calls.
+#
+# Starts a real Postgres with pgvector, loads the corpus, runs both evals in
+# offline mode, then the quality gate. If any score falls below the saved
+# baseline, this check goes red and the change cannot be merged (once branch
+# protection is switched on for main).
+
+name: quality gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      db:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: itsupport
+          POSTGRES_PASSWORD: itsupport
+          POSTGRES_DB: itsupport
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U itsupport -d itsupport"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      PROVIDER: fake
+      DATABASE_URL: postgresql://itsupport:itsupport@localhost:5432/itsupport
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Cache the reranker model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ hashFiles('shared/config.py') }}
+
+      - name: Install
+        # CPU-only PyTorch: the runner has no GPU and the full build is 2 GB.
+        run: pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
+
+      - name: Load the corpus into the database
+        run: python -m knowledge.ingest
+
+      - name: Evaluate the knowledge service (50 golden questions)
+        run: python -m eval.knowledge_eval --retrieval-only
+
+      - name: Evaluate the triage agent (50 labelled tickets)
+        run: python -m eval.agent_eval
+
+      - name: Quality gate
+        run: python -m eval.gate
+
+      - name: Keep the full results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results-offline
+          path: eval_results/
+
+  container:
+    # Proves the deployable image still builds. Nothing is pushed anywhere.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the Docker image
+        run: docker build -t it-support-agent .

@@ -27,6 +27,13 @@ def _int(name: str, default: int) -> int:
     return int(raw)
 
 
+def _float(name: str, default: float) -> float:
+    raw = os.getenv(name)
+    if raw is None or raw.strip() == "":
+        return default
+    return float(raw)
+
+
 @dataclass(frozen=True)
 class Settings:
     openai_api_key: str
@@ -39,6 +46,11 @@ class Settings:
     rerank_top_k: int
     rerank_model: str
     provider: str
+    price_input_per_m: float
+    price_output_per_m: float
+    price_embedding_per_m: float
+    daily_budget_usd: float
+    rate_limit_per_minute: int
 
     @property
     def reranking_enabled(self) -> bool:
@@ -72,6 +84,16 @@ def load_settings() -> Settings:
         rerank_top_k=_int("RERANK_TOP_K", 5),
         rerank_model=os.getenv("RERANK_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
         provider=os.getenv("PROVIDER", "openai").strip().lower(),
+        # US dollars per million tokens. Defaults are gpt-4o-mini and
+        # text-embedding-3-small list prices; change them in .env if you
+        # switch models or the prices move.
+        price_input_per_m=_float("PRICE_INPUT_PER_M", 0.15),
+        price_output_per_m=_float("PRICE_OUTPUT_PER_M", 0.60),
+        price_embedding_per_m=_float("PRICE_EMBEDDING_PER_M", 0.02),
+        # Guards for a public demo. The API refuses model calls once today's
+        # spend passes the budget, and caps each visitor's requests per minute.
+        daily_budget_usd=_float("DAILY_BUDGET_USD", 1.00),
+        rate_limit_per_minute=_int("RATE_LIMIT_PER_MINUTE", 20),
     )
 
 

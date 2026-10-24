@@ -35,6 +35,8 @@ import time
 
 from agent.graph import run_triage
 from shared.config import DATA_DIR, EVAL_DIR, settings
+from shared.usage import track
+from eval.knowledge_eval import percentile
 
 PRIORITY_INDEX = {"P1": 1, "P2": 2, "P3": 3, "P4": 4}
 
@@ -52,7 +54,10 @@ def evaluate(tickets: list[dict]) -> dict:
     started = time.time()
 
     for position, ticket in enumerate(tickets, start=1):
-        state = run_triage(ticket)
+        started_ticket = time.perf_counter()
+        with track() as usage:
+            state = run_triage(ticket)
+        latency_ms = round((time.perf_counter() - started_ticket) * 1000)
         nodes_run = [step["node"] for step in state.get("trace", [])]
 
         record = {
@@ -73,6 +78,8 @@ def evaluate(tickets: list[dict]) -> dict:
             "confidence": state.get("confidence"),
             "hold_reason": state.get("hold_reason"),
             "nodes_run": nodes_run,
+            "latency_ms": latency_ms,
+            "usage": usage.to_dict(),
         }
         record["category_correct"] = record["expected_category"] == record["predicted_category"]
         record["queue_correct"] = record["expected_queue"] == record["predicted_queue"]
@@ -127,6 +134,15 @@ def summarise(records: list[dict], elapsed: float) -> dict:
         "auto_resolve_recall": len(caught_auto) / len(should_auto) if should_auto else 0.0,
         "asset_tool_recall": len(asset_called) / len(asset_needed) if asset_needed else 0.0,
         "asset_tool_false_calls": len(asset_false_calls),
+        "usage": {
+            "latency_ms_p50": percentile([r["latency_ms"] for r in records], 0.50),
+            "latency_ms_p95": percentile([r["latency_ms"] for r in records], 0.95),
+            "cost_usd_per_ticket": round(
+                sum(r["usage"]["cost_usd"] for r in records) / total, 6) if total else 0.0,
+            "cost_usd": round(sum(r["usage"]["cost_usd"] for r in records), 6),
+            "model_calls_per_ticket": round(
+                sum(r["usage"]["model_calls"] for r in records) / total, 2) if total else 0.0,
+        },
         "seconds": round(elapsed, 1),
         "records": records,
     }
@@ -154,6 +170,11 @@ def print_report(summary: dict) -> None:
     print()
     print(f"  Asset tool recall          {pct(summary['asset_tool_recall'])}")
     print(f"  Asset tool false calls     {summary['asset_tool_false_calls']}")
+    usage = summary["usage"]
+    print(f"\n  Latency per ticket         p50 {usage['latency_ms_p50']} ms, "
+          f"p95 {usage['latency_ms_p95']} ms")
+    print(f"  Cost per ticket            ${usage['cost_usd_per_ticket']:.5f}"
+          f"  ({usage['model_calls_per_ticket']} model calls)")
     print(f"\nCompleted in {summary['seconds']}s")
 
     bad = [r for r in summary["records"]

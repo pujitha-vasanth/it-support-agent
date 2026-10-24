@@ -74,3 +74,20 @@ CREATE TABLE IF NOT EXISTS triage_runs (
 );
 
 CREATE INDEX IF NOT EXISTS triage_status_idx ON triage_runs (approval_status);
+
+-- One row per API request that touched a model: what it cost, how long it
+-- took and how it ended. This is what the /dashboard page reads.
+CREATE TABLE IF NOT EXISTS request_log (
+    id             SERIAL PRIMARY KEY,
+    endpoint       TEXT NOT NULL,              -- ask | search | triage
+    provider       TEXT NOT NULL,
+    model          TEXT NOT NULL,
+    latency_ms     INTEGER NOT NULL,
+    input_tokens   INTEGER NOT NULL DEFAULT 0,
+    output_tokens  INTEGER NOT NULL DEFAULT 0,
+    cost_usd       DOUBLE PRECISION NOT NULL DEFAULT 0,
+    outcome        TEXT NOT NULL,              -- answered | not_covered | auto_resolvable | held | error
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS request_log_created_idx ON request_log (created_at);

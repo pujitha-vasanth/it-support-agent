@@ -1,0 +1,101 @@
+# The full evaluation: real embeddings, real model, model-judged answers.
+#
+# Costs money (a few US cents per run), so it does not run on every push.
+# Run it from the Actions tab ("Run workflow"), and it also runs every Monday.
+# Needs a repository secret called OPENAI_API_KEY.
+#
+# Tick "save baseline" on the first run, or after a deliberate improvement,
+# to record the scores as the new bar. Every later run is gated against them.
+
+name: full eval
+
+on:
+  workflow_dispatch:
+    inputs:
+      save_baseline:
+        description: "Save these scores as the new baseline"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "30 3 * * 1"   # Mondays 03:30 UTC (09:00 IST)
+
+permissions:
+  contents: write
+
+jobs:
+  full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      db:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: itsupport
+          POSTGRES_PASSWORD: itsupport
+          POSTGRES_DB: itsupport
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U itsupport -d itsupport"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      PROVIDER: openai
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      DATABASE_URL: postgresql://itsupport:itsupport@localhost:5432/itsupport
+
+    steps:
+      - name: Check the API key is set
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "::error::Add a repository secret named OPENAI_API_KEY (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Cache the reranker model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ hashFiles('shared/config.py') }}
+
+      - name: Install
+        run: pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
+
+      - name: Load the corpus into the database
+        run: python -m knowledge.ingest
+
+      - name: Evaluate the knowledge service (answers judged by a model)
+        run: python -m eval.knowledge_eval
+
+      - name: Evaluate the triage agent
+        run: python -m eval.agent_eval
+
+      - name: Save as the new baseline
+        if: ${{ inputs.save_baseline }}
+        run: |
+          python -m eval.gate --update
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add eval/baseline.json
+          git commit -m "Update full-eval baseline" || echo "No change to commit"
+          git push
+
+      - name: Quality gate
+        run: python -m eval.gate
+
+      - name: Keep the full results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results-full
+          path: eval_results/

@@ -20,6 +20,7 @@ from functools import lru_cache
 from typing import Protocol
 
 from shared.config import settings
+from shared.usage import record_chat, record_embedding, rough_tokens
 
 _WORD_RE = re.compile(r"[a-z0-9]+")
 
@@ -41,6 +42,7 @@ class FakeProvider:
         self.dimensions = dimensions
 
     def embed(self, texts: list[str]) -> list[list[float]]:
+        record_embedding(sum(rough_tokens(t) for t in texts))
         return [self._embed_one(t) for t in texts]
 
     def _embed_one(self, text: str) -> list[float]:
@@ -54,6 +56,7 @@ class FakeProvider:
         return [v / norm for v in vec]
 
     def chat(self, system: str, user: str, json_mode: bool = False) -> str:
+        record_chat(rough_tokens(system + user), 60)
         if json_mode:
             # Enough structure for the triage graph to keep moving offline.
             return json.dumps(
@@ -103,6 +106,8 @@ class OpenAIProvider:
                 model=self.embedding_model, input=batch
             )
             out.extend(item.embedding for item in response.data)
+            if response.usage:
+                record_embedding(response.usage.total_tokens)
         return out
 
     def chat(self, system: str, user: str, json_mode: bool = False) -> str:
@@ -117,6 +122,8 @@ class OpenAIProvider:
         if json_mode:
             kwargs["response_format"] = {"type": "json_object"}
         response = self.client.chat.completions.create(**kwargs)
+        if response.usage:
+            record_chat(response.usage.prompt_tokens, response.usage.completion_tokens)
         return response.choices[0].message.content or ""
 
 

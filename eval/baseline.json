@@ -1,0 +1,27 @@
+{
+  "_about": "Scores the system must not fall below. The gate compares every eval run against these. Update with: python -m eval.gate --update (only after a deliberate improvement).",
+  "tolerance": 0.02,
+  "hard_limits": {
+    "agent": {
+      "false_auto_resolve_rate": {"max": 0.05}
+    }
+  },
+  "profiles": {
+    "fake": {
+      "_about": "Offline run, no API key, no cost. Embeddings are hashed word counts and the model is a stub, so only retrieval and routing are meaningful here.",
+      "knowledge": {
+        "retrieval_hit_rate": 0.90,
+        "retrieval_hit_rate_at_1": 0.84
+      },
+      "agent": {
+        "queue_accuracy": 0.82,
+        "priority_within_one": 0.90
+      }
+    },
+    "openai": {
+      "_about": "Full run with real embeddings, real model and model-judged answers. Empty until the first full run sets it: python -m eval.gate --update",
+      "knowledge": {},
+      "agent": {}
+    }
+  }
+}

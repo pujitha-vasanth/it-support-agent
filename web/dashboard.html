@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT Support Agent</title>
+<style>
+  :root {
+    --ink: #1c1c1c;
+    --muted: #6b6b6b;
+    --line: #e6e6e6;
+    --soft: #f7f7f5;
+    --accent: #1f6f5c;
+    --bad: #b3261e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #ffffff;
+    color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  main { max-width: 980px; margin: 0 auto; padding: 40px 16px 80px; }
+  h1 { font-size: 24px; margin: 0 0 4px; font-weight: 650; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+       font-weight: 600; margin: 40px 0 12px; }
+  .lede { color: var(--muted); margin: 0 0 8px; max-width: 640px; }
+  .tabs { display: flex; gap: 8px; margin: 24px 0 12px; }
+  .tabs button { border: 1px solid var(--line); background: #fff; padding: 8px 14px;
+                 border-radius: 999px; cursor: pointer; font: inherit; color: var(--ink); }
+  .tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  textarea, input { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid var(--line);
+                    border-radius: 8px; background: #fff; color: var(--ink); }
+  textarea { min-height: 84px; resize: vertical; }
+  .row { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+  .go { background: var(--accent); color: #fff; border: 0; padding: 10px 18px; border-radius: 8px;
+        font: inherit; font-weight: 600; cursor: pointer; }
+  .go:disabled { opacity: .5; cursor: wait; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--line); background: var(--soft); border-radius: 999px; padding: 4px 10px;
+          font-size: 13px; cursor: pointer; color: var(--ink); }
+  .result { margin-top: 16px; border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: none; }
+  .answer { white-space: pre-wrap; }
+  .meta { color: var(--muted); font-size: 13px; margin-top: 10px; }
+  .cites { margin: 10px 0 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .card .k { font-size: 12px; color: var(--muted); }
+  .card .v { font-size: 22px; font-weight: 650; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; }
+  th.n, td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  .tag { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--soft); }
+  .tag.ok { color: var(--accent); }
+  .tag.held { color: var(--bad); }
+  .err { color: var(--bad); }
+  .hidden { display: none; }
+  footer { margin-top: 48px; color: var(--muted); font-size: 13px; }
+  footer a { color: var(--ink); }
+</style>
+</head>
+<body>
+<main>
+  <h1>IT Support Agent</h1>
+  <p class="lede">Answers IT questions from a 400-page policy and runbook set, and triages tickets into a
+    human approval queue. Every answer cites its source, and says so when the documents do not cover it.
+    All data is synthetic.</p>
+
+  <div class="tabs">
+    <button id="tab-ask" class="on" onclick="show('ask')">Ask a question</button>
+    <button id="tab-triage" onclick="show('triage')">Triage a ticket</button>
+  </div>
+
+  <section id="ask">
+    <textarea id="question" placeholder="How long does a VPN session last before it disconnects?"></textarea>
+    <div class="row">
+      <button class="go" id="ask-go" onclick="ask()">Ask</button>
+      <div class="chips">
+        <span class="chip" onclick="fill('question', this)">How long does a VPN session last?</span>
+        <span class="chip" onclick="fill('question', this)">How do I request access to a shared drive?</span>
+        <span class="chip" onclick="fill('question', this)">What is the parking policy?</span>
+      </div>
+    </div>
+    <div class="result" id="ask-result"></div>
+  </section>
+
+  <section id="triage" class="hidden">
+    <input id="subject" placeholder="Subject: Laptop will not connect to office Wi-Fi">
+    <textarea id="body" placeholder="Describe the problem the way an employee would write it."></textarea>
+    <div class="row"><button class="go" id="triage-go" onclick="triage()">Triage</button></div>
+    <div class="result" id="triage-result"></div>
+  </section>
+
+  <h2>Live, last 24 hours</h2>
+  <div class="grid" id="cards"></div>
+  <div class="scroll"><table id="endpoints" style="margin-top:12px"></table></div>
+
+  <h2>Quality bar enforced on every change</h2>
+  <p class="lede">Every code change re-runs the 50-question golden set and the 50 labelled tickets.
+    If any score falls below this bar, the change is blocked.</p>
+  <table id="bar"></table>
+
+  <footer>Source and evaluation method:
+    <a href="https://github.com/pujitha-vasanth/it-support-agent">github.com/pujitha-vasanth/it-support-agent</a>
+    · API docs at <a href="/docs">/docs</a></footer>
+</main>
+
+<script>
+const LABELS = {
+  retrieval_hit_rate: "Retrieval hit rate", retrieval_hit_rate_at_1: "Retrieval hit rate @1",
+  faithfulness: "Faithfulness", correctness: "Correctness", category_accuracy: "Category accuracy",
+  queue_accuracy: "Routing accuracy", priority_within_one: "Priority within one level",
+  auto_resolve_recall: "Auto-resolve recall", asset_tool_recall: "Asset tool recall",
+  false_auto_resolve_rate: "False auto-resolve rate"
+};
+const pct = v => v == null ? "n/a" : (v * 100).toFixed(1) + "%";
+const usd = v => v == null ? "n/a" : (Number(v) === 0 || Number(v) >= 0.01) ? "$" + Number(v).toFixed(2) : "$" + Number(v).toFixed(5);
+const ms = v => v == null ? "n/a" : (v >= 1000 ? (v / 1000).toFixed(1) + " s" : Math.round(v) + " ms");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function show(which) {
+  for (const id of ["ask", "triage"]) {
+    document.getElementById(id).classList.toggle("hidden", id !== which);
+    document.getElementById("tab-" + id).classList.toggle("on", id === which);
+  }
+}
+function fill(id, el) { document.getElementById(id).value = el.textContent; }
+
+async function post(url, payload) {
+  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" },
+                                 body: JSON.stringify(payload) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail ? (typeof data.detail === "string" ? data.detail : "Invalid input") : res.statusText);
+  return data;
+}
+
+function usageLine(u, elapsed) {
+  return `${ms(elapsed)} · ${u.model_calls} model call${u.model_calls === 1 ? "" : "s"} · ${usd(u.cost_usd)}`;
+}
+
+async function ask() {
+  const q = document.getElementById("question").value.trim();
+  const box = document.getElementById("ask-result"), btn = document.getElementById("ask-go");
+  if (q.length < 3) return;
+  btn.disabled = true; box.style.display = "block"; box.innerHTML = "Searching the documents ...";
+  const t0 = performance.now();
+  try {
+    const d = await post("/knowledge/ask", { question: q });
+    const cites = d.covered ? d.citations.map(c => `<li>[${c.n}] ${esc(c.document)}, ${esc(c.section || "")}</li>`).join("") : "";
+    box.innerHTML = d.covered
+      ? `<div class="answer">${esc(d.answer)}</div><ol class="cites">${cites}</ol>`
+      : `<div class="answer"><span class="tag held">Not covered</span> The documents do not answer this, so the system declined rather than guess.</div>`;
+    box.innerHTML += `<div class="meta">${usageLine(d.usage, performance.now() - t0)}</div>`;
+  } catch (e) { box.innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+  btn.disabled = false; loadMetrics();
+}
+
+async function triage() {
+  const subject = document.getElementById("subject").value.trim();
+  const body = document.getElementById("body").value.trim();
+  const box = document.getElementById("triage-result"), btn = document.getElementById("triage-go");
+  if (!subject || !body) return;
+  btn.disabled = true; box.style.display = "block"; box.innerHTML = "Running the agents ...";
+  const t0 = performance.now();
+  try {
+    const d = await post("/agent/triage", { subject, body });
+    const steps = (d.trace || []).map(s => s.node).join(" → ");
+    box.innerHTML = `
+      <div class="row" style="margin-top:0">
+        <span class="tag">${esc(d.category)}</span><span class="tag">${esc(d.priority)}</span>
+        <span class="tag">${esc(d.queue)}</span>
+        <span class="tag ${d.auto_resolvable ? "ok" : "held"}">${d.auto_resolvable ? "Can auto-resolve" : "Held for a person"}</span>
+      </div>
+      ${d.hold_reason ? `<div class="meta">Why held: ${esc(d.hold_reason)}</div>` : ""}
+      <div class="answer" style="margin-top:12px">${esc(d.draft_reply)}</div>
+      <div class="meta">Steps: ${esc(steps)}</div>
+      <div class="meta">Draft saved as pending. Nothing is sent until a person approves it.</div>
+      <div class="meta">${usageLine(d.usage, performance.now() - t0)}</div>`;
+  } catch (e) { box.innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+  btn.disabled = false; loadMetrics();
+}
+
+async function loadMetrics() {
+  let m;
+  try { m = await (await fetch("/metrics")).json(); } catch { return; }
+  const eps = Object.values(m.endpoints || {});
+  const all = eps.reduce((a, e) => a + e.requests, 0);
+  const ask = (m.endpoints || {}).ask || {};
+  const tri = (m.endpoints || {}).triage || {};
+  const cards = [
+    ["Requests", all],
+    ["Answer latency (median)", ms(ask.latency_ms_p50)],
+    ["Cost per answer", usd(ask.avg_cost_usd)],
+    ["Cost per ticket", usd(tri.avg_cost_usd)],
+    ["Declined, not covered", pct(ask.not_covered_rate)],
+    ["Spent today / budget", `${usd(m.spent_today_usd)} / ${usd(m.daily_budget_usd)}`],
+  ];
+  document.getElementById("cards").innerHTML = cards.map(([k, v]) =>
+    `<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
+
+  const rows = Object.entries(m.endpoints || {});
+  document.getElementById("endpoints").innerHTML = rows.length ? `
+    <tr><th>Endpoint</th><th class="n">Requests</th><th class="n">p50</th><th class="n">p95</th><th class="n">Avg cost</th><th class="n">Errors</th></tr>
+    ${rows.map(([name, e]) => `<tr><td>${esc(name)}</td><td class="n">${e.requests}</td><td class="n">${ms(e.latency_ms_p50)}</td>
+      <td class="n">${ms(e.latency_ms_p95)}</td><td class="n">${usd(e.avg_cost_usd)}</td><td class="n">${pct(e.error_rate)}</td></tr>`).join("")}`
+    : `<tr><td class="meta">No requests yet. Ask something above.</td></tr>`;
+
+  const bar = m.quality_bar || {}, tol = bar.tolerance || 0;
+  const profile = (bar.profiles || {})[m.provider] || {};
+  const lines = [];
+  for (const block of ["knowledge", "agent"])
+    for (const [k, v] of Object.entries(profile[block] || {}))
+      if (!k.startsWith("_")) lines.push([LABELS[k] || k, "at least " + pct(v - tol)]);
+  for (const block of ["knowledge", "agent"])
+    for (const [k, v] of Object.entries((bar.hard_limits || {})[block] || {}))
+      lines.push([LABELS[k] || k, "at most " + pct(v.max) + ", fixed"]);
+  document.getElementById("bar").innerHTML =
+    `<tr><th>Metric</th><th>Rule (${esc(m.provider)} profile)</th></tr>` +
+    (lines.length ? lines.map(([k, r]) => `<tr><td>${k}</td><td>${r}</td></tr>`).join("")
+                  : `<tr><td class="meta" colspan="2">No baseline saved for this profile yet.</td></tr>`);
+}
+loadMetrics();
+</script>
+</body>
+</html>

@@ -18,6 +18,20 @@ from shared.config import settings
 
 SCHEMA_PATH = Path(__file__).resolve().parent / "schema.sql"
 
+_extension_ready = False
+
+
+def _ensure_vector_extension(conn: psycopg.Connection) -> None:
+    """A brand-new database does not have pgvector switched on yet, and the
+    type adapters below cannot register until it is. Switch it on once per
+    process, before anything else touches the connection."""
+    global _extension_ready
+    if _extension_ready:
+        return
+    conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+    conn.commit()
+    _extension_ready = True
+
 
 @contextmanager
 def get_connection() -> Iterator[psycopg.Connection]:
@@ -28,6 +42,7 @@ def get_connection() -> Iterator[psycopg.Connection]:
     """
     conn = psycopg.connect(settings.database_url)
     try:
+        _ensure_vector_extension(conn)
         register_vector(conn)
         yield conn
         conn.commit()
@@ -51,7 +66,7 @@ def reset_schema() -> None:
     """Drop everything and recreate. Destructive, used by `make reset`."""
     with get_connection() as conn:
         conn.execute(
-            "DROP TABLE IF EXISTS triage_runs, chunks, documents, assets CASCADE;"
+            "DROP TABLE IF EXISTS request_log, triage_runs, chunks, documents, assets CASCADE;"
         )
     init_schema()
 
@@ -74,7 +89,7 @@ def check_connection() -> str:
 def table_counts() -> dict[str, int]:
     counts: dict[str, int] = {}
     with get_connection() as conn:
-        for table in ("documents", "chunks", "assets", "triage_runs"):
+        for table in ("documents", "chunks", "assets", "triage_runs", "request_log"):
             try:
                 row = conn.execute(f"SELECT count(*) FROM {table}").fetchone()
                 counts[table] = int(row[0]) if row else 0

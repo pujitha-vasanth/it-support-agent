@@ -56,7 +56,18 @@ eval-agent:  ## Score the triage agent on the 50 labelled tickets
 eval-free:  ## Retrieval-only evaluation, makes no model calls and costs nothing
 	$(PY) -m eval.knowledge_eval --retrieval-only
 
+eval-offline:  ## Both evals with no API key, exactly as GitHub runs them on every push
+	PROVIDER=fake $(PY) -m eval.knowledge_eval --retrieval-only
+	PROVIDER=fake $(PY) -m eval.agent_eval
+
+gate:  ## Pass or fail the latest eval results against the saved baseline
+	$(PY) -m eval.gate
+
+baseline:  ## Save the latest eval results as the new baseline (after a real improvement)
+	$(PY) -m eval.gate --update
+
 setup: install check data ingest  ## Install, check, generate data and ingest
 
 .PHONY: help install check db-up db-down db-wipe data ingest reingest api \
-        triage pending eval eval-knowledge eval-agent eval-free setup
+        triage pending eval eval-knowledge eval-agent eval-free eval-offline \
+        gate baseline setup

@@ -35,6 +35,7 @@ from eval.judges import judge_correctness, judge_faithfulness, judges_available
 from knowledge.answer import NOT_COVERED, answer_question, build_context
 from knowledge.retrieval import search
 from shared.config import DATA_DIR, EVAL_DIR, settings
+from shared.usage import track
 
 
 def load_golden_set(limit: int | None = None) -> list[dict]:
@@ -57,15 +58,20 @@ def evaluate(items: list[dict], retrieval_only: bool = False) -> dict:
     for position, item in enumerate(items, start=1):
         wanted = expected_source(item)
 
-        if retrieval_only:
-            chunks = search(item["question"])
-            answer_text = ""
-            covered = None
-        else:
-            result = answer_question(item["question"])
-            chunks = result.chunks
-            answer_text = result.text
-            covered = result.covered
+        # The system's own cost and time, measured apart from the judges, so
+        # the per-question figures describe what a real user request costs.
+        asked_at = time.perf_counter()
+        with track() as system_usage:
+            if retrieval_only:
+                chunks = search(item["question"])
+                answer_text = ""
+                covered = None
+            else:
+                result = answer_question(item["question"])
+                chunks = result.chunks
+                answer_text = result.text
+                covered = result.covered
+        latency_ms = round((time.perf_counter() - asked_at) * 1000)
 
         sources = [c.source_path for c in chunks]
         hit = wanted in sources
@@ -83,6 +89,8 @@ def evaluate(items: list[dict], retrieval_only: bool = False) -> dict:
             "rank_of_expected": rank,
             "answer": answer_text,
             "covered": covered,
+            "latency_ms": latency_ms,
+            "system_usage": system_usage.to_dict(),
         }
 
         if judged and answer_text:
@@ -92,10 +100,12 @@ def evaluate(items: list[dict], retrieval_only: bool = False) -> dict:
                 record["correct"] = False
                 record["correctness_reason"] = "declined to answer an answerable question"
             else:
-                faithful, claims = judge_faithfulness(build_context(chunks), answer_text)
-                correct, reason = judge_correctness(
-                    item["question"], item["reference_answer"], answer_text
-                )
+                with track() as judge_usage:
+                    faithful, claims = judge_faithfulness(build_context(chunks), answer_text)
+                    correct, reason = judge_correctness(
+                        item["question"], item["reference_answer"], answer_text
+                    )
+                record["judge_cost_usd"] = round(judge_usage.cost_usd, 6)
                 record["faithful"] = faithful
                 record["unsupported_claims"] = claims
                 record["correct"] = correct
@@ -117,6 +127,32 @@ def _rate(records: list[dict], key: str) -> float | None:
     if not present:
         return None
     return sum(1 for r in present if r[key]) / len(present)
+
+
+def percentile(values: list[float], share: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    index = min(len(ordered) - 1, round(share * (len(ordered) - 1)))
+    return ordered[index]
+
+
+def usage_block(records: list[dict]) -> dict:
+    """What the system cost to run, per question, with the judges kept out."""
+    latencies = [r["latency_ms"] for r in records]
+    system_cost = sum(r["system_usage"]["cost_usd"] for r in records)
+    judge_cost = sum(r.get("judge_cost_usd", 0.0) for r in records)
+    n = len(records) or 1
+    return {
+        "latency_ms_p50": percentile(latencies, 0.50),
+        "latency_ms_p95": percentile(latencies, 0.95),
+        "cost_usd_per_question": round(system_cost / n, 6),
+        "system_cost_usd": round(system_cost, 6),
+        "judge_cost_usd": round(judge_cost, 6),
+        "cost_usd": round(system_cost + judge_cost, 6),
+        "input_tokens": sum(r["system_usage"]["input_tokens"] for r in records),
+        "output_tokens": sum(r["system_usage"]["output_tokens"] for r in records),
+    }
 
 
 def summarise(records: list[dict], elapsed: float, judged: bool) -> dict:
@@ -152,6 +188,7 @@ def summarise(records: list[dict], elapsed: float, judged: bool) -> dict:
         },
         "overall": block(records),
         "by_type": {name: block(rows) for name, rows in sorted(by_type.items())},
+        "usage": usage_block(records),
         "seconds": round(elapsed, 1),
         "records": records,
     }
@@ -186,6 +223,11 @@ def print_report(summary: dict) -> None:
           f"{pct(overall['correctness']):>9}{pct(overall['abstention_rate']):>9}")
     print(f"\nMean rank of the expected document when found: "
           f"{overall['mean_rank_when_hit']}")
+    usage = summary["usage"]
+    print(f"Latency per question: p50 {usage['latency_ms_p50']} ms, "
+          f"p95 {usage['latency_ms_p95']} ms")
+    print(f"Cost: ${usage['cost_usd_per_question']:.5f} per question, "
+          f"${usage['cost_usd']:.4f} for this run including judges")
     print(f"Completed in {summary['seconds']}s")
 
     misses = [r for r in summary["records"] if not r["retrieval_hit"]]
